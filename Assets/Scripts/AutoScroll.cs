@@ -13,7 +13,15 @@ public class AutoScroll : MonoBehaviour
     private float speedChangeSpeedScroll;
 
     private float speedScroll;
-    private bool isOn;
+    public bool isOn { private set; get; }
+    private bool isOnLast;
+
+    private SmoothScrollSnapping smoothScrollSnapping;
+
+    private void Start()
+    {
+        smoothScrollSnapping = GetComponent<SmoothScrollSnapping>();
+    }
 
     private void Update()
     {
@@ -26,9 +34,10 @@ public class AutoScroll : MonoBehaviour
             speedScroll = Mathf.Lerp(speedScroll, 0, speedChangeSpeedScroll * Time.deltaTime);
         }
 
-        if(speedScroll <= 0.1)
+        if(speedScroll <= 0.1 && isOnLast != isOn)
         {
-            GetComponent<SmoothScrollSnapping>().SnapToNearest();
+            smoothScrollSnapping.SnapToNearest();
+            isOnLast = isOn;
         }
 
         Vector3 positionScroll = scrollTransform.position;
@@ -39,11 +48,12 @@ public class AutoScroll : MonoBehaviour
 
     public void ChangeScroll()
     {
+        isOnLast = isOn;
         isOn = !isOn;
 
         if (isOn)
         {
-            GetComponent<SmoothScrollSnapping>().OnBeginDrag();
+            smoothScrollSnapping.OnBeginDrag();
         }
     }
 }

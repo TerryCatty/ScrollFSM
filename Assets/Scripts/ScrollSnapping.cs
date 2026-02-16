@@ -17,6 +17,7 @@ public class SmoothScrollSnapping : MonoBehaviour
     private Vector2 targetPosition;
     private Vector2 currentVelocity;
 
+
     public void OnBeginDrag()
     {
         isSnapping = false;
@@ -24,10 +25,10 @@ public class SmoothScrollSnapping : MonoBehaviour
 
     public void SnapToNearest()
     {
-        // Получаем cellSize.y + spacing.y
+        if (isSnapping) return;
+
         float stepHeight = GetCellHeight();
 
-        // Получаем чистую высоту ячейки (без отступа)
         float pureCellHeight = 0;
         var grid = scrollRect.content.GetComponent<GridLayoutGroup>();
         if (grid != null) pureCellHeight = grid.cellSize.y;
@@ -40,6 +41,19 @@ public class SmoothScrollSnapping : MonoBehaviour
         Vector3 anchorInContentSpace = content.InverseTransformPoint(centerAnchor.position);
 
         int nearestIndex = Mathf.RoundToInt((-anchorInContentSpace.y - (pureCellHeight / 2f)) / stepHeight);
+
+        int childIndex = nearestIndex % content.childCount + 1;
+
+        if(childIndex >= content.childCount)
+        {
+            childIndex = childIndex % content.childCount;
+        }
+
+        try
+        {
+            content.GetComponentsInChildren<PictureCell>()[childIndex].OnChoosen();
+        }
+        catch { }
 
         Vector3 anchorInViewportSpace = scrollRect.viewport.InverseTransformPoint(centerAnchor.position);
         float yOffset = anchorInViewportSpace.y;
@@ -73,9 +87,10 @@ public class SmoothScrollSnapping : MonoBehaviour
 
     private float GetCellHeight()
     {
-        var grid = scrollRect.content.GetComponent<GridLayoutGroup>();
-        if (grid != null)
+        if(scrollRect.content.TryGetComponent(out GridLayoutGroup grid))
+        {
             return grid.cellSize.y + grid.spacing.y;
+        }
 
         return heightSource != null ? heightSource.rect.height : 0;
     }
